@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>启鼎中心 · 租金报价</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+      background: #f0f2f5;
+      color: #1a1a1a;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, #1d4ed8, #1e40af);
+      color: white;
+      padding: 20px 16px 16px;
+      text-align: center;
+    }
+    .header h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: 0.02em; }
+    .header p  { font-size: 0.72rem; opacity: 0.75; margin-top: 4px; }
+
+    /* ── Layout ── */
+    .container { padding: 12px 12px 90px; max-width: 480px; margin: 0 auto; }
+
+    /* ── Cards ── */
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+    .card-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 14px;
+    }
+
+    /* ── Form fields ── */
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .field { margin-bottom: 12px; }
+    .field:last-child { margin-bottom: 0; }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 5px;
+    }
+    .unit { font-weight: 400; color: #9ca3af; font-size: 0.72rem; }
+
+    input[type="number"], select {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 1rem;
+      color: #111;
+      background: #fafafa;
+      -webkit-appearance: none;
+      appearance: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    input[type="number"]:focus, select:focus {
+      outline: none;
+      border-color: #3b82f6;
+      background: #fff;
+    }
+    /* hide spin buttons */
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+    input[type=number] { -moz-appearance: textfield; }
+
+    /* ── Result: blue gradient card ── */
+    .result-hero {
+      background: linear-gradient(135deg, #1d4ed8, #1e40af);
+      color: white;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(29,78,216,0.25);
+    }
+    .result-hero .rtitle {
+      font-size: 0.72rem;
+      opacity: 0.75;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 12px;
+    }
+    .rrow {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      font-size: 0.88rem;
+    }
+    .rrow:last-of-type { border-bottom: none; }
+    .rrow .rlabel { opacity: 0.88; }
+    .rrow .rval   { font-weight: 700; }
+
+    .rtotal {
+      background: rgba(255,255,255,0.15);
+      border-radius: 9px;
+      padding: 11px 14px;
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .rtotal-label { font-size: 0.85rem; font-weight: 600; }
+    .rtotal-val   { font-size: 1.3rem; font-weight: 800; }
+
+    /* ── Breakdown card ── */
+    .breakdown {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+    }
+    .brow {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid #dbeafe;
+      font-size: 0.84rem;
+      color: #1e40af;
+    }
+    .brow:last-child { border-bottom: none; }
+    .brow .blabel { color: #3b82f6; }
+    .brow .bval   { font-weight: 700; color: #1e3a8a; }
+
+    /* ── Discount badge ── */
+    .disc-badge {
+      background: #fef9ee;
+      border: 1px solid #fde68a;
+      border-radius: 9px;
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.84rem;
+      color: #92400e;
+    }
+    .disc-badge .dlabel { }
+    .disc-badge .dval   { font-weight: 700; font-size: 0.95rem; color: #b45309; }
+
+    /* ── Year summary ── */
+    .year-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 0;
+      border-bottom: 1px solid #f3f4f6;
+      font-size: 0.84rem;
+      color: #374151;
+    }
+    .year-row:last-child { border-bottom: none; }
+    .year-row .yval { font-weight: 600; }
+    .year-row.total .yval { color: #1d4ed8; font-weight: 700; font-size: 0.95rem; }
+
+    /* ── Empty state ── */
+    .formula-note {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 9px 12px;
+      margin-bottom: 12px;
+      font-size: 0.75rem;
+      color: #64748b;
+      line-height: 1.6;
+    }
+    .formula-note .fn-row { margin-bottom: 2px; }
+    .formula-note .fn-row:last-child { margin-bottom: 0; }
+    .formula-note .fn-chosen { color: #1d4ed8; font-weight: 600; }
+    .formula-note .fn-label { color: #94a3b8; margin-right: 4px; }
+
+    .empty {
+      text-align: center;
+      color: #9ca3af;
+      font-size: 0.85rem;
+      padding: 36px 16px;
+    }
+    .empty .eicon { font-size: 2.8rem; margin-bottom: 10px; }
+
+    /* ── Bottom bar ── */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: white;
+      border-top: 1px solid #e5e7eb;
+      padding: 10px 16px;
+      display: flex;
+      gap: 10px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    /* trick: fixed doesn't respect margin auto, use left/right transform */
+    @media (min-width: 480px) {
+      .bottom-bar { left: 50%; right: auto; transform: translateX(-50%); width: 480px; }
+    }
+    .btn-reset {
+      flex: 1;
+      padding: 12px;
+      background: #f3f4f6;
+      color: #374151;
+      border: none;
+      border-radius: 9px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-reset:active { background: #e5e7eb; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>启鼎中心 · 快速报价</h1>
+  <p>填写参数后实时计算</p>
+</div>
+
+<div class="container">
+
+  <!-- ─── 输入区 ─── -->
+  <div class="card">
+    <div class="card-title">房源参数</div>
+
+    <div class="grid2">
+      <div class="field">
+        <label>建筑面积 <span class="unit">㎡</span></label>
+        <input type="number" id="area" inputmode="decimal" placeholder="如 135.00" step="0.01" oninput="calc()">
+      </div>
+      <div class="field">
+        <label>租金单价 <span class="unit">元/㎡/天</span></label>
+        <input type="number" id="price" inputmode="decimal" placeholder="如 1.82" step="0.0001" oninput="calc()">
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="field">
+        <label>合同年限</label>
+        <select id="contractYears" onchange="calc()">
+          <option value="1">1 年</option>
+          <option value="2" selected>2 年</option>
+          <option value="3">3 年</option>
+          <option value="5">5 年</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>免租期 <span class="unit">天</span></label>
+        <input type="number" id="freeDays" inputmode="numeric" placeholder="0" min="0" step="1" oninput="calc()">
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="field">
+        <label>租金付款周期</label>
+        <select id="rentPeriod" onchange="calc()">
+          <option value="2">双月付</option>
+          <option value="3" selected>季付</option>
+          <option value="6">半年付</option>
+          <option value="12">年付</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>物业费付款周期</label>
+        <select id="propPeriod" onchange="calc()">
+          <option value="2">双月付</option>
+          <option value="3" selected>季付</option>
+          <option value="6">半年付</option>
+          <option value="12">年付</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="field">
+        <label>押金月数</label>
+        <select id="depMonths" onchange="calc()">
+          <option value="1">1 个月</option>
+          <option value="2" selected>2 个月</option>
+          <option value="3">3 个月</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>押金是否含物业费</label>
+        <select id="depIncProp" onchange="calc()">
+          <option value="yes">含物业费</option>
+          <option value="no">不含物业费</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 结果区 ─── -->
+  <div id="results">
+    <div class="empty">
+      <div class="eicon">📐</div>
+      <div>填写面积和单价<br>结果实时显示</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ─── 底部重置 ─── -->
+<div class="bottom-bar">
+  <button class="btn-reset" onclick="resetAll()">清空重置</button>
+</div>
+
+<script>
+  const PERIOD_LABEL = { 1:'月', 3:'季', 6:'半年', 12:'年' };
+  const WUYE = 10; // 固定物业费 元/㎡/月
+
+  function fmt(n) {
+    return '¥ ' + n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function calc() {
+    const area          = parseFloat(document.getElementById('area').value)          || 0;
+    const price         = parseFloat(document.getElementById('price').value)         || 0;
+    const freeDays      = parseFloat(document.getElementById('freeDays').value)      || 0;
+    const contractYears = parseInt(document.getElementById('contractYears').value)   || 1;
+    const rentPeriodMo  = parseInt(document.getElementById('rentPeriod').value);
+    const propPeriodMo  = parseInt(document.getElementById('propPeriod').value);
+    const depMo         = parseInt(document.getElementById('depMonths').value);
+    const depInc        = document.getElementById('depIncProp').value === 'yes';
+    const el            = document.getElementById('results');
+
+    if (area <= 0 || price <= 0) {
+      el.innerHTML = `<div class="empty"><div class="eicon">📐</div><div>填写面积和单价<br>结果实时显示</div></div>`;
+      return;
+    }
+
+    // ── 核心计算 ──────────────────────────────────────────
+    const r = (v) => Math.round(v * 100) / 100;
+
+    // 名义月租金（不含优惠，用于押金计算）
+    const grossMonthRent  = r(area * price * 365 / 12);
+    const grossYearRent   = r(area * price * 365);
+    const monthProp       = r(area * WUYE);
+    const yearProp        = r(monthProp * 12);
+
+    // 免租折算：两种方式取 max（甲方利益最大化）
+    const totalDays   = 365 * contractYears;
+    const actualDays  = totalDays - freeDays;
+
+    // 方式一：精确折算，不提前 round 日单价
+    const method1 = r(area * price * actualDays / totalDays * 365 / 12);
+
+    // 方式二：先 round 折后日单价到两位小数，再算月租金
+    const roundedDaily = Math.round(price * actualDays / totalDays * 100) / 100;
+    const method2 = r(area * roundedDaily * 365 / 12);
+
+    const effectiveMonthRent = Math.max(method1, method2);
+
+    // 优惠总金额（用于显示）
+    const discount = freeDays > 0 ? r(freeDays * area * price) : 0;
+
+    // 每期金额基于实付月租金
+    const perRent   = r(effectiveMonthRent * rentPeriodMo);
+    const perProp   = r(monthProp * propPeriodMo);
+
+    // 押金基于名义月租金（不含优惠）
+    const deposit   = depInc
+                        ? r((grossMonthRent + monthProp) * depMo)
+                        : r(grossMonthRent * depMo);
+
+    const firstTotal  = r(deposit + perRent + perProp);
+    const rentPLabel  = PERIOD_LABEL[rentPeriodMo];
+    const propPLabel  = PERIOD_LABEL[propPeriodMo];
+
+    const hasDiscount = discount > 0;
+
+    // ── 渲染 ──────────────────────────────────────────────
+    let html = '';
+
+    // 核心报价卡
+    html += `
+      <div class="result-hero">
+        <div class="rtitle">核心报价（${contractYears} 年合同）</div>
+        ${hasDiscount ? `
+        <div class="rrow"><span class="rlabel">优惠前月租金</span><span class="rval" style="opacity:0.65;text-decoration:line-through">${fmt(grossMonthRent)}</span></div>
+        <div class="rrow"><span class="rlabel">优惠后月租金</span><span class="rval">${fmt(effectiveMonthRent)}</span></div>
+        ` : `
+        <div class="rrow"><span class="rlabel">月租金</span><span class="rval">${fmt(grossMonthRent)}</span></div>
+        `}
+        <div class="rrow"><span class="rlabel">月物业费</span><span class="rval">${fmt(monthProp)}</span></div>
+        <div class="rrow" style="border-bottom:none"><span class="rlabel">月实付合计（租金＋物业）</span><span class="rval">${fmt(effectiveMonthRent + monthProp)}</span></div>
+      </div>`;
+
+    // 公式注解
+    const n = (v) => parseFloat(v.toFixed(4));
+    const m1Chosen = method1 >= method2;
+    if (!hasDiscount) {
+      html += `
+        <div class="formula-note">
+          <span class="fn-label">月租金计算方式：</span>${n(price)} × ${n(area)} × 365 ÷ 12 = <span class="fn-chosen">${fmt(grossMonthRent)}</span>
+        </div>`;
+    } else if (m1Chosen) {
+      html += `
+        <div class="formula-note">
+          <span class="fn-label">优惠后月租金计算方式：</span><span class="fn-chosen">${n(price)} × ${n(area)} × (${totalDays}−${freeDays}) ÷ ${totalDays} × 365 ÷ 12 = ${fmt(method1)}</span>
+        </div>`;
+    } else {
+      html += `
+        <div class="formula-note">
+          <span class="fn-label">优惠后月租金计算方式：</span>日单价 ${n(price)} × (${totalDays}−${freeDays}) ÷ ${totalDays} ≈ <span class="fn-chosen">${roundedDaily} 元/㎡/天</span> → ${n(area)} × ${roundedDaily} × 365 ÷ 12 = <span class="fn-chosen">${fmt(method2)}</span>
+        </div>`;
+    }
+
+    // 首期明细
+    html += `
+      <div class="breakdown">
+        <div class="brow"><span class="blabel">每期实付租金</span><span class="bval">${fmt(perRent)}</span></div>
+        <div class="brow"><span class="blabel">每期物业费</span><span class="bval">${fmt(perProp)}</span></div>
+        <div class="brow">
+          <span class="blabel">押金</span>
+          <span class="bval">${fmt(deposit)}</span>
+        </div>
+        <div class="brow" style="font-weight:700;border-bottom:none">
+          <span class="blabel" style="color:#1d4ed8">首期合计</span>
+          <span class="bval" style="font-size:0.95rem">${fmt(firstTotal)}</span>
+        </div>
+      </div>`;
+
+
+
+    el.innerHTML = html;
+  }
+
+  function resetAll() {
+    ['area','price','freeDays'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('contractYears').value = '2';
+    document.getElementById('rentPeriod').value    = '3';
+    document.getElementById('propPeriod').value    = '3';
+    document.getElementById('depMonths').value     = '2';
+    document.getElementById('depIncProp').value    = 'yes';
+    calc();
+  }
+</script>
+
+</body>
+</html>
