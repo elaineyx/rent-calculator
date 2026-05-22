@@ -268,7 +268,6 @@
       <div class="field">
         <label>租金付款周期</label>
         <select id="rentPeriod" onchange="calc()">
-          <option value="2">双月付</option>
           <option value="3" selected>季付</option>
           <option value="6">半年付</option>
           <option value="12">年付</option>
@@ -277,7 +276,6 @@
       <div class="field">
         <label>物业费付款周期</label>
         <select id="propPeriod" onchange="calc()">
-          <option value="2">双月付</option>
           <option value="3" selected>季付</option>
           <option value="6">半年付</option>
           <option value="12">年付</option>
@@ -289,16 +287,15 @@
       <div class="field">
         <label>押金月数</label>
         <select id="depMonths" onchange="calc()">
-          <option value="1">1 个月</option>
           <option value="2" selected>2 个月</option>
           <option value="3">3 个月</option>
         </select>
       </div>
       <div class="field">
-        <label>押金是否含物业费</label>
+        <label>物业费</label>
         <select id="depIncProp" onchange="calc()">
-          <option value="yes">含物业费</option>
-          <option value="no">不含物业费</option>
+          <option value="yes">是</option>
+          <option value="no">否</option>
         </select>
       </div>
     </div>
