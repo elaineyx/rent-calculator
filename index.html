@@ -396,9 +396,11 @@
           <span class="fn-label">月租金计算方式：</span>${n(price)} × ${n(area)} × 365 ÷ 12 = <span class="fn-chosen">${fmt(grossMonthRent)}</span>
         </div>`;
     } else {
+      const effectiveDaily = Math.round(price * actualDays / totalDays * 100) / 100;
       html += `
         <div class="formula-note">
-          <span class="fn-label">优惠后月租金计算方式：</span><span class="fn-chosen">${n(price)} × ${n(area)} × (${totalDays}−${freeDays}) ÷ ${totalDays} × 365 ÷ 12 = ${fmt(effectiveMonthRent)}</span>
+          <div class="fn-row"><span class="fn-label">优惠后月租金：</span>${n(price)} × ${n(area)} × (${totalDays}−${freeDays}) ÷ ${totalDays} × 365 ÷ 12 = <span class="fn-chosen">${fmt(effectiveMonthRent)}</span></div>
+          <div class="fn-row"><span class="fn-label">优惠后租金单价：</span>${n(price)} × (${totalDays}−${freeDays}) ÷ ${totalDays} = <span class="fn-chosen">${effectiveDaily.toFixed(2)} 元/㎡/天</span></div>
         </div>`;
     }
 
