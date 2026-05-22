@@ -349,21 +349,12 @@
     const monthProp       = r(area * WUYE);
     const yearProp        = r(monthProp * 12);
 
-    // 免租折算：两种方式取 max（甲方利益最大化）
-    const totalDays   = 365 * contractYears;
-    const actualDays  = totalDays - freeDays;
+    // 实付月租金：(年租金 × 年数 − 优惠总额) ÷ (年数 × 12)
+    const totalDays  = 365 * contractYears;
+    const actualDays = totalDays - freeDays;
+    const discount   = freeDays > 0 ? r(freeDays * area * price) : 0;
 
-    // 方式一：精确折算，不提前 round 日单价
-    const method1 = r(area * price * actualDays / totalDays * 365 / 12);
-
-    // 方式二：先 round 折后日单价到两位小数，再算月租金
-    const roundedDaily = Math.round(price * actualDays / totalDays * 100) / 100;
-    const method2 = r(area * roundedDaily * 365 / 12);
-
-    const effectiveMonthRent = Math.max(method1, method2);
-
-    // 优惠总金额（用于显示）
-    const discount = freeDays > 0 ? r(freeDays * area * price) : 0;
+    const effectiveMonthRent = r((grossYearRent * contractYears - discount) / (contractYears * 12));
 
     // 每期金额基于实付月租金
     const perRent   = r(effectiveMonthRent * rentPeriodMo);
@@ -399,21 +390,15 @@
 
     // 公式注解
     const n = (v) => parseFloat(v.toFixed(4));
-    const m1Chosen = method1 >= method2;
     if (!hasDiscount) {
       html += `
         <div class="formula-note">
           <span class="fn-label">月租金计算方式：</span>${n(price)} × ${n(area)} × 365 ÷ 12 = <span class="fn-chosen">${fmt(grossMonthRent)}</span>
         </div>`;
-    } else if (m1Chosen) {
-      html += `
-        <div class="formula-note">
-          <span class="fn-label">优惠后月租金计算方式：</span><span class="fn-chosen">${n(price)} × ${n(area)} × (${totalDays}−${freeDays}) ÷ ${totalDays} × 365 ÷ 12 = ${fmt(method1)}</span>
-        </div>`;
     } else {
       html += `
         <div class="formula-note">
-          <span class="fn-label">优惠后月租金计算方式：</span>日单价 ${n(price)} × (${totalDays}−${freeDays}) ÷ ${totalDays} ≈ <span class="fn-chosen">${roundedDaily} 元/㎡/天</span> → ${n(area)} × ${roundedDaily} × 365 ÷ 12 = <span class="fn-chosen">${fmt(method2)}</span>
+          <span class="fn-label">优惠后月租金计算方式：</span><span class="fn-chosen">${n(price)} × ${n(area)} × (${totalDays}−${freeDays}) ÷ ${totalDays} × 365 ÷ 12 = ${fmt(effectiveMonthRent)}</span>
         </div>`;
     }
 
@@ -433,6 +418,17 @@
       </div>`;
 
 
+
+    // 首年参考
+    const firstYearRent = r(effectiveMonthRent * 12);
+    const firstYearProp = yearProp;
+    html += `
+      <div class="card">
+        <div class="card-title">首年参考</div>
+        <div class="year-row"><span>首年实付租金</span><span class="yval">${fmt(firstYearRent)}</span></div>
+        <div class="year-row"><span>首年物业费</span><span class="yval">${fmt(firstYearProp)}</span></div>
+        <div class="year-row total"><span>总计</span><span class="yval">${fmt(r(firstYearRent + firstYearProp))}</span></div>
+      </div>`;
 
     el.innerHTML = html;
   }
