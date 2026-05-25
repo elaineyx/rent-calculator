@@ -79,6 +79,19 @@
     input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
     input[type=number] { -moz-appearance: textfield; }
 
+    /* ── Read-only display field (日综合单价) ── */
+    input.input-display {
+      background: #eff6ff;
+      border-color: #bfdbfe;
+      color: #1d4ed8;
+      font-weight: 700;
+      cursor: default;
+    }
+    input.input-display:focus {
+      border-color: #bfdbfe;
+      background: #eff6ff;
+    }
+
     /* ── Result: blue gradient card ── */
     .result-hero {
       background: linear-gradient(135deg, #1d4ed8, #1e40af);
@@ -250,6 +263,17 @@
 
     <div class="grid2">
       <div class="field">
+        <label>家具单价 <span class="unit">元/㎡/天</span></label>
+        <input type="number" id="furniPrice" inputmode="decimal" placeholder="如 0.20" step="0.0001" oninput="calc()">
+      </div>
+      <div class="field">
+        <label>日综合单价 <span class="unit">元/㎡/天</span></label>
+        <input type="number" id="combinedDisplay" class="input-display" readonly tabindex="-1" placeholder="—">
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="field">
         <label>合同年限</label>
         <select id="contractYears" onchange="calc()">
           <option value="1">1 年</option>
@@ -327,6 +351,8 @@
   function calc() {
     const area          = parseFloat(document.getElementById('area').value)          || 0;
     const price         = parseFloat(document.getElementById('price').value)         || 0;
+    const furniPrice    = parseFloat(document.getElementById('furniPrice').value)    || 0;
+    const combinedPrice = price + furniPrice;
     const freeDays      = parseFloat(document.getElementById('freeDays').value)      || 0;
     const contractYears = parseInt(document.getElementById('contractYears').value)   || 1;
     const rentPeriodMo  = parseInt(document.getElementById('rentPeriod').value);
@@ -334,6 +360,10 @@
     const depMo         = parseInt(document.getElementById('depMonths').value);
     const depInc        = document.getElementById('depIncProp').value === 'yes';
     const el            = document.getElementById('results');
+
+    // 更新日综合单价展示
+    document.getElementById('combinedDisplay').value =
+      (price > 0 || furniPrice > 0) ? parseFloat(combinedPrice.toFixed(4)) : '';
 
     if (area <= 0 || price <= 0) {
       el.innerHTML = `<div class="empty"><div class="eicon">📐</div><div>填写面积和单价<br>结果实时显示</div></div>`;
@@ -343,16 +373,16 @@
     // ── 核心计算 ──────────────────────────────────────────
     const r = (v) => Math.round(v * 100) / 100;
 
-    // 名义月租金（不含优惠，用于押金计算）
-    const grossMonthRent  = r(area * price * 365 / 12);
-    const grossYearRent   = r(area * price * 365);
+    // 名义月租金（不含优惠，用于押金计算；方案A：含家具单价）
+    const grossMonthRent  = r(area * combinedPrice * 365 / 12);
+    const grossYearRent   = r(area * combinedPrice * 365);
     const monthProp       = r(area * WUYE);
     const yearProp        = r(monthProp * 12);
 
     // 实付月租金：(年租金 × 年数 − 优惠总额) ÷ (年数 × 12)
     const totalDays  = 365 * contractYears;
     const actualDays = totalDays - freeDays;
-    const discount   = freeDays > 0 ? r(freeDays * area * price) : 0;
+    const discount   = freeDays > 0 ? r(freeDays * area * combinedPrice) : 0; // 方案A：免租期含家具
 
     const effectiveMonthRent = r((grossYearRent * contractYears - discount) / (contractYears * 12));
 
@@ -375,14 +405,15 @@
     let html = '';
 
     // 核心报价卡
+    const rentLabel = furniPrice > 0 ? '月租金（含家具）' : '月租金';
     html += `
       <div class="result-hero">
         <div class="rtitle">核心报价（${contractYears} 年合同）</div>
         ${hasDiscount ? `
-        <div class="rrow"><span class="rlabel">优惠前月租金</span><span class="rval" style="opacity:0.65;text-decoration:line-through">${fmt(grossMonthRent)}</span></div>
-        <div class="rrow"><span class="rlabel">优惠后月租金</span><span class="rval">${fmt(effectiveMonthRent)}</span></div>
+        <div class="rrow"><span class="rlabel">优惠前${rentLabel}</span><span class="rval" style="opacity:0.65;text-decoration:line-through">${fmt(grossMonthRent)}</span></div>
+        <div class="rrow"><span class="rlabel">优惠后${rentLabel}</span><span class="rval">${fmt(effectiveMonthRent)}</span></div>
         ` : `
-        <div class="rrow"><span class="rlabel">月租金</span><span class="rval">${fmt(grossMonthRent)}</span></div>
+        <div class="rrow"><span class="rlabel">${rentLabel}</span><span class="rval">${fmt(grossMonthRent)}</span></div>
         `}
         <div class="rrow"><span class="rlabel">月物业费</span><span class="rval">${fmt(monthProp)}</span></div>
         <div class="rrow" style="border-bottom:none"><span class="rlabel">月实付合计（租金＋物业）</span><span class="rval">${fmt(effectiveMonthRent + monthProp)}</span></div>
@@ -390,17 +421,18 @@
 
     // 公式注解
     const n = (v) => parseFloat(v.toFixed(4));
+    const priceStr = furniPrice > 0 ? `(${n(price)}+${n(furniPrice)})` : `${n(price)}`;
     if (!hasDiscount) {
       html += `
         <div class="formula-note">
-          <span class="fn-label">月租金计算方式：</span>${n(price)} × ${n(area)} × 365 ÷ 12 = <span class="fn-chosen">${fmt(grossMonthRent)}</span>
+          <span class="fn-label">月租金计算方式：</span>${priceStr} × ${n(area)} × 365 ÷ 12 = <span class="fn-chosen">${fmt(grossMonthRent)}</span>
         </div>`;
     } else {
-      const effectiveDaily = Math.round(price * actualDays / totalDays * 100) / 100;
+      const effectiveDaily = Math.round(combinedPrice * actualDays / totalDays * 10000) / 10000;
       html += `
         <div class="formula-note">
-          <div class="fn-row"><span class="fn-label">优惠后月租金：</span>${n(price)} × ${n(area)} × (${totalDays}−${freeDays}) ÷ ${totalDays} × 365 ÷ 12 = <span class="fn-chosen">${fmt(effectiveMonthRent)}</span></div>
-          <div class="fn-row"><span class="fn-label">优惠后租金单价：</span>${n(price)} × (${totalDays}−${freeDays}) ÷ ${totalDays} = <span class="fn-chosen">${effectiveDaily.toFixed(2)} 元/㎡/天</span></div>
+          <div class="fn-row"><span class="fn-label">优惠后月租金：</span>${priceStr} × ${n(area)} × (${totalDays}−${freeDays}) ÷ ${totalDays} × 365 ÷ 12 = <span class="fn-chosen">${fmt(effectiveMonthRent)}</span></div>
+          <div class="fn-row"><span class="fn-label">优惠后综合单价：</span>${priceStr} × (${totalDays}−${freeDays}) ÷ ${totalDays} = <span class="fn-chosen">${effectiveDaily.toFixed(4)} 元/㎡/天</span></div>
         </div>`;
     }
 
@@ -436,7 +468,8 @@
   }
 
   function resetAll() {
-    ['area','price','freeDays'].forEach(id => document.getElementById(id).value = '');
+    ['area','price','furniPrice','freeDays'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('combinedDisplay').value = '';
     document.getElementById('contractYears').value = '2';
     document.getElementById('rentPeriod').value    = '3';
     document.getElementById('propPeriod').value    = '3';
